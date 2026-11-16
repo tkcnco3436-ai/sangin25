@@ -2,8 +2,8 @@
 
 소상공인 디자인 지원사업 공고를 모아 보여주는 웹사이트입니다. 설계안의 1단계 범위(기초 가이드, 실시간 보드, 서류 발급처)와 포트폴리오 제작소를 담았습니다.
 
-- 사이트: https://sowonworld.vercel.app
-- 저장소: https://github.com/tkcnco3436-ai/sowonworld
+- 사이트: https://sangin25.vercel.app
+- 저장소: https://github.com/tkcnco3436-ai/sangin25
 
 ## 실행
 

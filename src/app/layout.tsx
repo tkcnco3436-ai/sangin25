@@ -21,7 +21,7 @@ const SITE_TITLE = "소상공인에 필요한 지원사업 알리미 - 상인25"
 const SITE_DESC = "간판·로고·포장·상세페이지 디자인 지원사업 공고를 마감 임박순으로 모아 보고, 신청 방법과 서류 발급처까지 한 번에 확인하세요.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://sowonworld.vercel.app"),
+  metadataBase: new URL("https://sangin25.vercel.app"),
   title: { default: SITE_TITLE, template: "%s - 상인25" },
   description: SITE_DESC,
   applicationName: "상인25",
