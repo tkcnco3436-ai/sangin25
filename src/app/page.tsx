@@ -43,10 +43,10 @@ export default function Home() {
             {closingSoon > 0 && <> · 이번 주 마감 <b className="pink">{closingSoon}건</b></>}
           </p>
           <h1 className="hero-title">
-            <span className="hero-line">간판·로고·포장 디자인,</span>
+            <span className="hero-line">내가 필요한 디자인</span>
             <span className="hero-line">
               <span className="hero-chip" aria-hidden><span /><span /><span /></span>
-              <em>지원받고</em> 바꾸세요
+              <em>지원금</em>으로 바꾸세요
             </span>
           </h1>
           <p className="home-lead">흩어진 지원사업 공고를 모아 마감 임박순으로 보여드려요.<br className="br-desk" /> 신청 방법과 서류 발급처도 함께 안내합니다.</p>
