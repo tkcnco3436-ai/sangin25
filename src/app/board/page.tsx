@@ -4,10 +4,10 @@ import { getStatus, sortByDeadline } from "@/lib/status";
 import { BoardFilters } from "@/components/BoardFilters";
 import { isKind } from "@/lib/kinds";
 
-export const metadata: Metadata = { title: "실시간 공고 — 소원월드" };
+export const metadata: Metadata = { title: "실시간 공고" };
 
-export default async function BoardPage({ searchParams }: { searchParams: Promise<{ q?: string; type?: string }> }) {
-  const { q = "", type } = await searchParams;
+export default async function BoardPage({ searchParams }: { searchParams: Promise<{ q?: string; type?: string; region?: string }> }) {
+  const { q = "", type, region } = await searchParams;
   const items = sortByDeadline(getPrograms()).map((p) => ({ program: p, status: getStatus(p) }));
   const hasSample = items.some((i) => i.program.sample);
 
@@ -25,7 +25,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
             지금은 화면 확인용 <b>예시 공고</b>가 표시됩니다. 실제 공고는 기업마당 API 연동 후 검수를 거쳐 올라옵니다.
           </p>
         )}
-        <BoardFilters items={items} initialQuery={q} initialKind={isKind(type) ? type : "all"} />
+        <BoardFilters items={items} initialQuery={q} initialKind={isKind(type) ? type : "all"} initialRegion={region} />
       </div>
     </section>
   );

@@ -14,7 +14,7 @@ export const TOUR: TourStep[] = [
     path: "/",
     target: '[data-tour="start"]',
     title: "여기서 시작해요",
-    text: "지원사업이 처음이라면 '처음이에요'를 눌러 신청 가이드부터 봐요.",
+    text: "처음이라면 '지원사업이 처음이라 막막해요'를 눌러 신청 가이드부터 봐요.",
     next: "/guide",
   },
   {

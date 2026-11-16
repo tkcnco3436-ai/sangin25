@@ -8,9 +8,7 @@ import { KINDS, kindOf, type Kind } from "@/lib/kinds";
 
 type Item = { program: Program; status: Status };
 
-// 맨 왼쪽부터 지역 전체, 부산, 서울 순. 나머지는 수도권 → 광역시 → 도 순서.
-const REGIONS = ["전체", "부산", "서울", "경기", "인천", "대구", "광주", "대전", "울산", "세종", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"];
-const REGION_KEY = "sowonworld-region"; // 고른 지역을 다음 방문 때도 기억
+import { REGIONS, getSavedRegion, saveRegion } from "@/lib/regions";
 
 const STATUS_FILTERS: { key: "all" | StatusKind | "active"; label: string }[] = [
   { key: "active", label: "신청 가능" },
@@ -21,7 +19,7 @@ const STATUS_FILTERS: { key: "all" | StatusKind | "active"; label: string }[] = 
 
 const SYNONYMS: Record<string, string[]> = { 로고: ["브랜드", "로고", "BI"], 패키지: ["포장", "패키지"], 상세페이지: ["상세페이지", "온라인"] };
 
-export function BoardFilters({ items, initialQuery, initialKind }: { items: Item[]; initialQuery: string; initialKind: Kind | "all" }) {
+export function BoardFilters({ items, initialQuery, initialKind, initialRegion }: { items: Item[]; initialQuery: string; initialKind: Kind | "all"; initialRegion?: string }) {
   const [kind, setKind] = useState<Kind | "all">(initialKind);
   const [query, setQuery] = useState(initialQuery);
   const [cats, setCats] = useState<string[]>([]);
@@ -29,18 +27,17 @@ export function BoardFilters({ items, initialQuery, initialKind }: { items: Item
   const [status, setStatus] = useState<(typeof STATUS_FILTERS)[number]["key"]>("active");
   const [moreOpen, setMoreOpen] = useState(false); // 휴대폰에서 분야·상태 필터 펼치기
 
+  // 홈 검색에서 지역을 골라 왔으면 그 지역, 아니면 지난번에 고른 지역
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(REGION_KEY);
-      if (saved && REGIONS.includes(saved)) setRegion(saved);
-    } catch {}
-  }, []);
+    if (initialRegion && REGIONS.includes(initialRegion)) {
+      setRegion(initialRegion);
+      saveRegion(initialRegion);
+    } else setRegion(getSavedRegion());
+  }, [initialRegion]);
 
   const pickRegion = (r: string) => {
     setRegion(r);
-    try {
-      localStorage.setItem(REGION_KEY, r);
-    } catch {}
+    saveRegion(r);
   };
 
   // 사업 성격은 주소(?type=)에도 남겨서 링크로 공유하거나 뒤로 가기 해도 유지되게 합니다.

@@ -17,9 +17,16 @@ const pretendard = localFont({
   display: "swap",
 });
 
+const SITE_TITLE = "소상공인에 필요한 지원사업 알리미 - 소원월드";
+const SITE_DESC = "간판·로고·포장·상세페이지 디자인 지원사업 공고를 마감 임박순으로 모아 보고, 신청 방법과 서류 발급처까지 한 번에 확인하세요.";
+
 export const metadata: Metadata = {
-  title: "소원월드 — 디자인 지원사업 정보 월드",
-  description: "간판·로고·포장·상세페이지 디자인 지원사업 공고를 모아 보고, 신청 방법과 서류 발급처까지 한 번에 확인하세요.",
+  metadataBase: new URL("https://sowonworld.vercel.app"),
+  title: { default: SITE_TITLE, template: "%s - 소원월드" },
+  description: SITE_DESC,
+  applicationName: "소원월드",
+  openGraph: { type: "website", locale: "ko_KR", siteName: "소원월드", title: SITE_TITLE, description: SITE_DESC, url: "/" },
+  twitter: { card: "summary", title: SITE_TITLE, description: SITE_DESC },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
