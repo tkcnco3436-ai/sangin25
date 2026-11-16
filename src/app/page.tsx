@@ -6,19 +6,9 @@ import { DOCUMENTS } from "@/lib/documents";
 import { LevelGate } from "@/components/onboarding/LevelGate";
 import { HeroSearch } from "@/components/HeroSearch";
 import { KindBadge, KindIcon } from "@/components/KindIcon";
-import { BookOpen, ChevronRight, FileCheck, LayoutGrid, Monitor, Package, Sparkles, Store, GraduationCap } from "@/components/Icons";
+import { BookOpen, ChevronRight, FileCheck, Sparkles } from "@/components/Icons";
 
 export const revalidate = 3600;
-
-// 무엇이 필요한지 아이콘으로 바로 고르기 (K-뉴딜 아카데미의 원형 아이콘 메뉴 참고)
-const NEEDS = [
-  { label: "간판", href: "/board?q=간판", Icon: Store },
-  { label: "로고·브랜드", href: "/board?q=로고", Icon: Sparkles },
-  { label: "포장·패키지", href: "/board?q=포장", Icon: Package },
-  { label: "상세페이지", href: "/board?q=상세페이지", Icon: Monitor },
-  { label: "교육·컨설팅", href: "/board?type=capacity", Icon: GraduationCap },
-  { label: "전체 공고", href: "/board", Icon: LayoutGrid },
-];
 
 export default function Home() {
   const programs = sortByDeadline(getPrograms());
@@ -41,28 +31,26 @@ export default function Home() {
     <>
       <LevelGate />
 
-      {/* 1. 한 문장 소개 + 검색 (KONA BIZ의 쉬운 헤드라인 참고) */}
+      {/* 1. 큰 한 문장 헤드라인 (카카오 비즈니스 메인 참고: 흰 배경, 가운데 정렬, 아주 큰 글씨) */}
       <section className="home-hero">
+        <span className="hero-float hero-float-1" aria-hidden />
+        <span className="hero-float hero-float-2" aria-hidden />
+        <span className="hero-float hero-float-3" aria-hidden />
         <div className="container">
           <p className="home-live">
             <span className="live-dot" aria-hidden />
             지금 신청할 수 있는 공고 <b>{active.length}건</b>
             {closingSoon > 0 && <> · 이번 주 마감 <b className="pink">{closingSoon}건</b></>}
           </p>
-          <h1>
-            사장님 가게에 필요한 <br className="br-mobile" />
-            <em>지원사업</em>을 찾아드려요
+          <h1 className="hero-title">
+            <span className="hero-line">간판·로고·포장 디자인,</span>
+            <span className="hero-line">
+              <span className="hero-chip" aria-hidden><span /><span /><span /></span>
+              <em>지원받고</em> 바꾸세요
+            </span>
           </h1>
-          <p className="home-lead">간판·로고·포장 디자인 지원 공고를 한곳에 모았어요. 지역과 필요한 것만 고르세요.</p>
+          <p className="home-lead">흩어진 지원사업 공고를 모아 마감 임박순으로 보여드려요.<br className="br-desk" /> 신청 방법과 서류 발급처도 함께 안내합니다.</p>
           <HeroSearch />
-          <nav className="needs" aria-label="필요한 것 바로 고르기">
-            {NEEDS.map(({ label, href, Icon }) => (
-              <Link key={label} href={href} className="need">
-                <span className="need-icon"><Icon size={26} /></span>
-                <span>{label}</span>
-              </Link>
-            ))}
-          </nav>
         </div>
       </section>
 

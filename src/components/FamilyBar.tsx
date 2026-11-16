@@ -1,7 +1,7 @@
 import { SANGINWORLD_URL } from "@/lib/site";
 import { ExternalLink } from "./Icons";
 
-// 헤더 위 얇은 띠: 소원월드가 상인월드 패밀리 서비스임을 보여주고, 로고를 누르면 상인월드를 새 탭으로 엽니다.
+// 헤더 위 얇은 띠: 상인25가 상인월드 패밀리 서비스임을 보여주고, 로고를 누르면 상인월드를 새 탭으로 엽니다.
 export function FamilyBar() {
   return (
     <div className="family-bar">

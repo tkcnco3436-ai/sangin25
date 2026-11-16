@@ -17,15 +17,15 @@ const pretendard = localFont({
   display: "swap",
 });
 
-const SITE_TITLE = "소상공인에 필요한 지원사업 알리미 - 소원월드";
+const SITE_TITLE = "소상공인에 필요한 지원사업 알리미 - 상인25";
 const SITE_DESC = "간판·로고·포장·상세페이지 디자인 지원사업 공고를 마감 임박순으로 모아 보고, 신청 방법과 서류 발급처까지 한 번에 확인하세요.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://sowonworld.vercel.app"),
-  title: { default: SITE_TITLE, template: "%s - 소원월드" },
+  title: { default: SITE_TITLE, template: "%s - 상인25" },
   description: SITE_DESC,
-  applicationName: "소원월드",
-  openGraph: { type: "website", locale: "ko_KR", siteName: "소원월드", title: SITE_TITLE, description: SITE_DESC, url: "/" },
+  applicationName: "상인25",
+  openGraph: { type: "website", locale: "ko_KR", siteName: "상인25", title: SITE_TITLE, description: SITE_DESC, url: "/" },
   twitter: { card: "summary", title: SITE_TITLE, description: SITE_DESC },
 };
 
@@ -37,8 +37,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <header className="site-header">
           <div className="container">
             <Link href="/" className="logo">
-              <span className="logo-mark" aria-hidden>소</span>
-              소원월드
+              <span className="logo-mark" aria-hidden>상</span>
+              상인25
               <span className="beta">BETA</span>
             </Link>
             <NavLinks />
@@ -47,7 +47,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <main>{children}</main>
         <footer className="site-footer">
           <div className="container">
-            <b style={{ color: "var(--ink)" }}>소원월드 (디자인 지원사업 정보 월드) · 운영 태경씨앤코</b>
+            <b style={{ color: "var(--ink)" }}>상인25 · 운영 태경씨앤코</b>
             <span>공고 요약은 참고용입니다. 지원 대상과 조건은 반드시 기관 공고문 원문으로 확인하세요.</span>
             <span>문의 [이메일 주소] · [전화번호]</span>
             <span>

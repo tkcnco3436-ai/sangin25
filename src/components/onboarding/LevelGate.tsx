@@ -33,7 +33,7 @@ export function LevelGate() {
     <div className="gate" role="dialog" aria-modal="true" aria-labelledby="gate-title">
       <div className="gate-brand">
         <span className="logo-mark" aria-hidden>소</span>
-        <b id="gate-title">소원월드에 오신 걸 환영해요</b>
+        <b id="gate-title">상인25에 오신 걸 환영해요</b>
       </div>
       <button type="button" className="gate-half gate-beginner" onClick={() => choose(true)} autoFocus>
         <span className="gate-tag">초급</span>
