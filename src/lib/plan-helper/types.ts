@@ -21,6 +21,8 @@ export type PlanField = {
   section?: string;
   /** 양식 안의 작성 안내(※ …, * 최대 1페이지 등). 공고문 기준 가이드는 NoticeBrief에서 합쳐 보여 줌 */
   guide?: string;
+  /** 칸에 원래 적혀 있던 양식 문구 ("( ) 부스", "원"). 값이 없을 때 이 문구를 보여 주고 그 위에 고쳐 씀 */
+  template?: string;
 };
 
 export type CellAlign = "left" | "center" | "right";
@@ -55,6 +57,8 @@ export type PlanBlock =
   | { type: "heading"; level: number; text: string; fontPt?: number }
   | { type: "paragraph"; text: string; note?: boolean; fieldId?: string; fontPt?: number; bold?: boolean; align?: CellAlign }
   | { type: "table"; variant: TableVariant; cols: number; rows: PlanCell[][]; colWidths?: number[] }
+  /** 양식 안 그림 (배너·로고 등). src는 data URL — 크기 제한을 넘으면 자리표시만 */
+  | { type: "image"; src?: string; alt: string }
   | { type: "pageBreak" };
 
 export type PlanSection = { id: string; title: string; blocks: PlanBlock[] };

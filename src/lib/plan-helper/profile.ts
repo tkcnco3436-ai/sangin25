@@ -71,7 +71,7 @@ const RULES: { test: RegExp; key: ProfileKey }[] = [
   { test: /사업자\s*(등록)?\s*번호/, key: "bizNo" },
   { test: /법인\s*(등록)?\s*번호/, key: "corpNo" },
   { test: /(기업|업체|회사|법인|상호|기관)\s*(명|이름)|^상호$|주관(연구개발)?기관명|신청\s*(기업|업체)/, key: "companyName" },
-  { test: /대표\s*(자)?\s*(명|성명|이름)?$|^대표자|^성명$/, key: "ceoName" },
+  { test: /^대표\s*(자)?\s*(명|성명|이름)?$|^대표자/, key: "ceoName" },
   { test: /(설립|개업|창업)\s*(일|일자|연월일)/, key: "foundedAt" },
   { test: /(사업자|기업)\s*(구분|형태|유형)/, key: "bizType" },
   { test: /업종|업태/, key: "industry" },
@@ -87,8 +87,11 @@ const RULES: { test: RegExp; key: ProfileKey }[] = [
 
 /** 라벨 하나를 기업정보 키로 (못 찾으면 null). 표 머리글과 합친 "성명 · 소속" 같은 라벨은 앞부분만 봅니다. */
 export function matchProfileKey(label: string): ProfileKey | null {
-  const head = label.split(/\s[·—]\s/)[0].trim();
-  if (head.length > 30) return null;
+  // 영문 칸에 한글 기업정보를 넣지 않음
+  if (/영문|english/i.test(label)) return null;
+  // 양식은 "회 사 명", "주   소"처럼 글자 사이를 띄우는 경우가 많아 공백을 지우고 비교
+  const head = label.split(/\s[·—]\s/)[0].replace(/\s+/g, "");
+  if (!head || head.length > 30) return null;
   for (const r of RULES) if (r.test.test(head)) return r.key;
   return null;
 }

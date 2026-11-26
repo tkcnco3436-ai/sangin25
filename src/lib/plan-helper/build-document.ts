@@ -38,6 +38,12 @@ const SUB_HEADING = /^\(\d{1,2}\)\s*\S/;
 // 작성 안내 꼬리: "* 최대 1페이지"
 const GUIDE_TAIL = /\s*(\*\s*.+)$/;
 
+/** "( ) 부스", "원", "Kw"처럼 단위·괄호만 적힌 입력 칸 */
+export function isTemplateText(s: string): boolean {
+  const t = s.replace(/\s+/g, "");
+  return t.length <= 8 && /^(\(\))?(원|부스|kw|개소|회선|명|개|건|%|천원|만원|백만원|시간|년|월|일|년월일)$/i.test(t);
+}
+
 type Grid = { anchors: { r: number; c: number; cell: IRCell }[][]; rows: number; cols: number };
 
 /** kordoc 표는 병합으로 덮인 자리도 빈 칸으로 채워 줍니다. 덮인 자리를 빼고 시작 칸만 남깁니다. */
@@ -67,6 +73,8 @@ type BuildInput = {
   pageCount?: number;
   title?: string;
   warnings?: string[];
+  /** 그림 블록 → data URL (서버에서 크기·형식 제한을 걸어 넘겨 줌). 없으면 그림은 건너뜀 */
+  imageSrc?: (b: IRBlock) => string | undefined;
 };
 
 export function buildPlanDocument(input: BuildInput): PlanDocument {
@@ -105,7 +113,14 @@ export function buildPlanDocument(input: BuildInput): PlanDocument {
       handleTable(b);
       continue;
     }
-    if (b.type === "separator" || b.type === "image") continue;
+    if (b.type === "image") {
+      if (input.imageSrc) {
+        const src = input.imageSrc(b);
+        section.blocks.push({ type: "image", src, alt: src ? "양식 그림" : "[그림 — 원본 파일에서 확인]" });
+      }
+      continue;
+    }
+    if (b.type === "separator") continue;
 
     const text = clean(b.text);
     if (b.type === "list" && b.children?.length) {
@@ -218,23 +233,25 @@ export function buildPlanDocument(input: BuildInput): PlanDocument {
         const text = clean(a.cell.text);
         const cell: PlanCell = { text, colSpan: a.cell.colSpan, rowSpan: a.cell.rowSpan };
         if (a.cell.isHeader || (headerRow && ri === 0)) cell.header = true;
-        if (text) {
+        const template = text && !cell.header && isTemplateText(text);
+        if (text && !template) {
           if (text.length <= 24 && !cell.header) cell.align = "center";
           if (cell.header) cell.align = "center";
           return cell;
         }
-        // 빈칸 → 라벨 찾기: 같은 행 왼쪽의 글 있는 칸, 없으면 열 머리글
+        // 빈칸(또는 "( ) 부스", "원" 같은 단위만 있는 입력 칸) → 라벨 찾기: 같은 행 왼쪽의 글 있는 칸, 없으면 열 머리글
         let rowLabel = "";
+        const isCheck = checkCols.has(a.c) && ri > 0;
         for (let k = ci - 1; k >= 0; k--) {
           const lt = clean(row[k].cell.text);
-          if (lt) {
+          if (lt && !isTemplateText(lt)) {
             rowLabel = lt;
-            if (lt.length <= 30) markLabel(row[k]);
+            // 짧은 항목 이름 칸만 라벨 배경 (체크리스트 문항 칸은 원본처럼 흰 바탕)
+            if (lt.length <= 30 && !isCheck) markLabel(row[k]);
             break;
           }
         }
         const header = colHeader[a.c] ?? "";
-        const isCheck = checkCols.has(a.c) && ri > 0;
         let label = "";
         let kind: FieldKind = "cell";
         if (isCheck) {
@@ -250,6 +267,7 @@ export function buildPlanDocument(input: BuildInput): PlanDocument {
           return cell; // 라벨을 못 찾은 빈칸은 장식 칸으로 둠
         }
         cell.fieldId = addField(label, kind);
+        if (template) fields[cell.fieldId].template = text; // 칸에 원래 있던 "( ) 부스" 같은 양식 문구
         return cell;
       });
     });
@@ -289,6 +307,55 @@ export function buildPlanDocument(input: BuildInput): PlanDocument {
     fieldOrder,
     warnings: input.warnings ?? [],
   };
+}
+
+/** 캡처(비전) 결과 한 블록 — ai/tasks.ts의 CAPTURE_SCHEMA와 같은 모양 */
+export type CapturedBlock = {
+  type: "heading" | "paragraph" | "table";
+  text?: string;
+  level?: number;
+  fontPt?: number;
+  bold?: boolean;
+  rows?: { text: string; colSpan: number; rowSpan: number }[][];
+};
+
+/**
+ * 캡처 결과(행마다 "시작 칸"만 나열)를 kordoc과 같은 모양(덮인 자리까지 채운 전체 격자)으로 바꿔
+ * buildPlanDocument를 그대로 재사용합니다.
+ */
+export function capturedToIrBlocks(pages: { pageNumber: number; blocks: CapturedBlock[] }[]): IRBlock[] {
+  const out: IRBlock[] = [];
+  for (const { pageNumber, blocks } of pages) {
+    for (const b of blocks) {
+      const style = b.fontPt || b.bold ? { fontSize: b.fontPt ? Math.round(b.fontPt * 10) : undefined, bold: b.bold || undefined } : undefined;
+      if (b.type === "table" && b.rows?.length) {
+        const rowsIn = b.rows.filter((r) => r.length);
+        const nRows = rowsIn.length;
+        // 열 수: 첫 행 colSpan 합과 행별 배치 결과 중 큰 값
+        const occupied: boolean[][] = Array.from({ length: nRows }, () => []);
+        const placed: { r: number; c: number; cell: IRCell }[] = [];
+        let nCols = 0;
+        rowsIn.forEach((row, r) => {
+          let c = 0;
+          for (const raw of row) {
+            while (occupied[r][c]) c++;
+            const cs = Math.max(1, Math.floor(raw.colSpan || 1));
+            const rs = Math.max(1, Math.min(Math.floor(raw.rowSpan || 1), nRows - r));
+            for (let i = r; i < r + rs; i++) for (let j = c; j < c + cs; j++) occupied[i][j] = true;
+            placed.push({ r, c, cell: { text: raw.text ?? "", colSpan: cs, rowSpan: rs } });
+            c += cs;
+            nCols = Math.max(nCols, c);
+          }
+        });
+        const cells: IRCell[][] = Array.from({ length: nRows }, () => Array.from({ length: nCols }, () => ({ text: "", colSpan: 1, rowSpan: 1 })));
+        for (const p of placed) cells[p.r][p.c] = p.cell;
+        out.push({ type: "table", pageNumber, table: { rows: nRows, cols: nCols, cells, hasHeader: false } });
+      } else if (b.text?.trim()) {
+        out.push({ type: b.type === "heading" ? "heading" : "paragraph", level: b.type === "heading" ? b.level ?? 2 : undefined, text: b.text, pageNumber, style });
+      }
+    }
+  }
+  return out;
 }
 
 /** 문서 전체를 한 줄 목록으로 (챗봇·AI 매칭에 보낼 때) */

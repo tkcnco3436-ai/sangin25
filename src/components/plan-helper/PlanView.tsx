@@ -21,6 +21,7 @@ const FieldEditor = memo(function FieldEditor({
   id,
   kind,
   label,
+  template,
   value,
   selected,
   onSelect,
@@ -29,13 +30,14 @@ const FieldEditor = memo(function FieldEditor({
   id: string;
   kind: string;
   label: string;
+  template?: string;
   value: FieldValue | undefined;
   selected: boolean;
   onSelect: (id: string) => void;
   onEdit: (id: string, text: string) => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const text = value?.text ?? "";
+  const text = value?.text ?? template ?? "";
   useEffect(() => {
     const el = ref.current;
     if (el && document.activeElement !== el && el.innerText !== text) el.innerText = text;
@@ -117,6 +119,7 @@ export function PlanView({ doc, values, selectedId, onSelect, onEdit }: Props) {
             id={f.id}
             kind={f.kind}
             label={f.label}
+            template={f.template}
             value={values[f.id]}
             selected={selectedId === f.id}
             onSelect={onSelect}
@@ -148,6 +151,16 @@ export function PlanView({ doc, values, selectedId, onSelect, onEdit }: Props) {
           >
             {b.text}
           </p>
+        );
+      case "image":
+        return b.src ? (
+          // 양식 그림은 data URL이라 next/image 최적화 대상이 아님
+          // eslint-disable-next-line @next/next/no-img-element
+          <img key={key} className="ph-img" src={b.src} alt={b.alt} />
+        ) : (
+          <div key={key} className="ph-img-missing">
+            {b.alt}
+          </div>
         );
       case "table":
         return (

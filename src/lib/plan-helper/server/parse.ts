@@ -22,6 +22,21 @@ async function kordocParse(buf: Buffer, format: SourceFormat) {
   return result;
 }
 
+const IMAGE_MAX_BYTES = 400 * 1024;
+const IMAGE_MAX_COUNT = 4;
+
+/** 양식 안 그림을 data URL로 (브라우저 저장 용량을 지키려고 크기·개수 제한) */
+function imageSrcFactory() {
+  let used = 0;
+  return (b: IRBlock): string | undefined => {
+    const img = b.imageData;
+    if (!img || !/^image\/(png|jpeg|gif|webp)$/.test(img.mimeType)) return undefined;
+    if (img.data.byteLength > IMAGE_MAX_BYTES || used >= IMAGE_MAX_COUNT) return undefined;
+    used++;
+    return `data:${img.mimeType};base64,${Buffer.from(img.data).toString("base64")}`;
+  };
+}
+
 export type FormParseResult = {
   doc: PlanDocument;
   /** 파서로 구조가 거의 안 나왔음 → 페이지 이미지 캡처 경로 권장 */
@@ -39,6 +54,7 @@ export async function parseForm(buf: Buffer, fileName: string, format: SourceFor
     pageCount: result.metadata?.pageCount,
     title: undefined,
     warnings: [],
+    imageSrc: imageSrcFactory(),
   });
   const textLength = (result.markdown ?? "").replace(/\s+/g, "").length;
   const tables = (result.blocks as IRBlock[]).filter((b) => b.type === "table").length;

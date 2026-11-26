@@ -34,7 +34,7 @@ function outlineOf(doc: PlanDocument, values: Record<string, FieldValue>) {
     .map((id) => {
       const f = doc.fields[id];
       const v = (values[id]?.text ?? "").replace(/\s+/g, " ").trim();
-      return `- [${id}] ${f.section ? f.section + " > " : ""}${f.label}: ${v ? v.slice(0, 160) : "(비어 있음)"}`;
+      return `- [${id}] ${f.section ? f.section + " > " : ""}${f.label}: ${v ? v.slice(0, 160) : f.template ? `(양식 문구: ${f.template})` : "(비어 있음)"}`;
     })
     .join("\n");
 }
@@ -51,6 +51,12 @@ export function PlanHelperApp() {
   const [doc, setDoc] = useState<PlanDocument | null>(null);
   const [formStatus, setFormStatus] = useState<Status>("idle");
   const [formMsg, setFormMsg] = useState<string>();
+  const formFileRef = useRef<File | null>(null); // 캡처로 다시 만들 때 쓰는 원본 (메모리에만)
+  const [capture, setCapture] = useState<{ suggested: boolean; reason?: string; pages: string; busy: boolean; error?: string }>({
+    suggested: false,
+    pages: "1-3",
+    busy: false,
+  });
 
   const [values, setValues] = useState<Record<string, FieldValue>>({});
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -112,23 +118,50 @@ export function PlanHelperApp() {
     }
   };
 
+  const loadDoc = (d: PlanDocument) => {
+    const prefilled = profile ? prefillByRules(d, profile) : {};
+    setDoc(d);
+    setValues(prefilled);
+    setSelectedId(null);
+    setFormStatus("done");
+    setRestored(false);
+    setFormMsg(`작성 영역 ${d.fieldOrder.length}개 · 기업정보로 ${Object.keys(prefilled).length}칸 채움`);
+    void aiPrefill(d, prefilled);
+  };
+
   const uploadForm = async (file: File) => {
+    formFileRef.current = file;
     setFormStatus("busy");
     setFormMsg("계획서 양식을 읽어 화면으로 옮기는 중…");
     try {
       const data = (await postFile("/api/plan-helper/parse", file)) as { doc: PlanDocument; needsCapture: boolean; reason?: string };
-      const prefilled = profile ? prefillByRules(data.doc, profile) : {};
-      setDoc(data.doc);
-      setValues(prefilled);
-      setSelectedId(null);
-      setFormStatus("done");
-      setRestored(false);
-      const n = Object.keys(prefilled).length;
-      setFormMsg(`작성 영역 ${data.doc.fieldOrder.length}개 · 기업정보로 ${n}칸 채움${data.needsCapture ? ` · ⚠ ${data.reason}` : ""}`);
-      void aiPrefill(data.doc, prefilled);
+      loadDoc(data.doc);
+      setCapture((c) => ({ ...c, suggested: data.needsCapture, reason: data.reason, error: undefined, busy: false }));
     } catch (e) {
       setFormStatus("error");
       setFormMsg((e as Error).message);
+    }
+  };
+
+  // 캡처 경로: 고른 쪽을 이미지로 만들어 Claude 비전으로 재구성
+  const runCapture = async () => {
+    const file = formFileRef.current;
+    if (!file) {
+      setCapture((c) => ({ ...c, error: "원본 파일이 메모리에 없어요. 계획서 양식을 다시 올린 뒤 시도해 주세요." }));
+      return;
+    }
+    setCapture((c) => ({ ...c, busy: true, error: undefined }));
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("pages", capture.pages);
+      const res = await fetch("/api/plan-helper/capture", { method: "POST", body: form });
+      const data = await res.json().catch(() => ({ error: "서버 응답을 읽지 못했어요." }));
+      if (!res.ok) throw new Error(data.error ?? "캡처 재구성에 실패했어요.");
+      loadDoc(data.doc);
+      setCapture((c) => ({ ...c, busy: false, suggested: false }));
+    } catch (e) {
+      setCapture((c) => ({ ...c, busy: false, error: (e as Error).message }));
     }
   };
 
@@ -362,7 +395,35 @@ export function PlanHelperApp() {
         <div className="ph-split">
           <div className="ph-left">
             {doc.warnings.length > 0 && <div className="ph-warn">{doc.warnings.join(" · ")}</div>}
-            {formMsg && formStatus === "done" && <div className="ph-info">{formMsg}</div>}
+            {formMsg && formStatus === "done" && (
+              <div className="ph-info">
+                {formMsg}
+                <span className="ph-legend">
+                  <span>
+                    <i style={{ background: "#fff6d1" }} />
+                    기업정보로 채움
+                  </span>
+                  <span>
+                    <i style={{ background: "#e7f0ff" }} />
+                    AI 제안 적용
+                  </span>
+                </span>
+              </div>
+            )}
+            <div className={`ph-capture${capture.suggested ? " is-suggested" : ""}`}>
+              <span>
+                {capture.suggested ? <b>원본 모양을 제대로 읽지 못했어요. </b> : "모양이 원본과 많이 다르면 "}
+                페이지를 이미지로 찍어 Claude가 다시 그리게 할 수 있어요 (쪽당 30초~1분).
+              </span>
+              <label>
+                쪽
+                <input value={capture.pages} onChange={(e) => setCapture((c) => ({ ...c, pages: e.target.value }))} disabled={capture.busy} aria-label="캡처할 쪽 범위" />
+              </label>
+              <button type="button" className="ph-btn-sm ph-btn-primary" onClick={runCapture} disabled={capture.busy || !formFileRef.current}>
+                {capture.busy ? "캡처로 재구성 중…" : "캡처로 다시 만들기"}
+              </button>
+              {capture.error && <span className="ph-drop-error">{capture.error}</span>}
+            </div>
             <PlanView doc={doc} values={values} selectedId={selectedId} onSelect={setSelectedId} onEdit={onEdit} />
           </div>
           <div className="ph-right">
