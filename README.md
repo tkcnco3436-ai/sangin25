@@ -24,6 +24,7 @@ npm run build && npm start
 | `/board/[id]` | 공고 상세, 준비 서류 체크리스트, 원문 링크 |
 | `/guide` | 신청 5단계 가이드, 소상공인 자가진단, 용어 사전 |
 | `/docs` | 서류 발급처 링크 모음 |
+| `/plan-helper` | 지원사업 계획서 도우미 (PC 전용 프로토타입) — 공고문·계획서 양식을 올리면 왼쪽 계획서 뷰 + 오른쪽 AI 챗봇. 설명: [docs/plan-helper/README.md](docs/plan-helper/README.md) |
 
 ## 공고 업데이트 흐름 (사람 검수 포함)
 
@@ -48,6 +49,10 @@ npm run build && npm start
 ## AI 문장 다듬기 (포트폴리오 제작소)
 
 `/portfolio`의 'AI로 문장 다듬기'는 `/api/polish`에서 Claude(claude-opus-5-5)를 호출합니다. `ANTHROPIC_API_KEY`를 `.env.local`과 Vercel 프로젝트 환경 변수에 넣어야 동작합니다. 키가 없으면 버튼을 눌렀을 때 '아직 설정되지 않았어요' 안내가 나옵니다.
+
+## 계획서 도우미 AI 연결
+
+`/plan-helper`의 AI는 `AI_PROVIDER` 환경변수로 고릅니다. 로컬 `npm run dev`는 기본으로 이 컴퓨터에 로그인된 Claude Code CLI(`claude-code`, API 키 불필요, 개발 전용)를 쓰고, 배포는 `AI_PROVIDER=anthropic` + `ANTHROPIC_API_KEY`를 씁니다. 배포 전환 절차는 [docs/plan-helper/README.md §9](docs/plan-helper/README.md#9-ai-연결-요구-8번).
 
 ## 지금 들어 있는 데이터
 

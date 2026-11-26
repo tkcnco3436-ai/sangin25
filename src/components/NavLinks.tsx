@@ -8,6 +8,7 @@ const LINKS = [
   { href: "/guide", label: "신청 가이드" },
   { href: "/docs", label: "서류 발급처" },
   { href: "/portfolio", label: "포트폴리오 제작" },
+  { href: "/plan-helper", label: "계획서 도우미" },
 ];
 
 export function NavLinks() {
