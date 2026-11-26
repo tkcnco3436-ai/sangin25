@@ -311,7 +311,7 @@ export function PlanHelperApp() {
         >
           테스트 계정으로 로그인
         </button>
-        <p className="ph-muted">운영에서는 Supabase Auth 로그인으로 바뀝니다. (docs/plan-helper/개발자-전달문서.md)</p>
+        <p className="ph-muted">운영에서는 Supabase Auth 로그인으로 바뀝니다. (docs/plan-helper/README.md)</p>
       </div>
     );
   }
