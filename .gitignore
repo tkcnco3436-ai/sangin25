@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 !.env.local.example
 data/raw-sample.json
+
+# 테스트용 실제 공고·계획서 파일 (커밋 금지)
+/samples-local/
